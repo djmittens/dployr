@@ -1,0 +1,80 @@
+---
+- name: Provision your machine
+  hosts: all
+  # what does this do?
+  gather_facts: false
+
+  tasks:
+    - name: Install some apk packages
+      become: true
+      apk: >
+        package={{ item }}
+        state=present
+        update_cache=yes
+      with_items:
+        - htop
+        - tree
+        - jq
+        - fail2ban
+        - vim
+        - mosh
+        - ufw
+
+    - name: Reset UFW firewall
+      become: true
+      ufw: >-
+        state=reset
+
+    - name: Allow OpenSSH
+      become: true
+      ufw: >
+        rule=allow
+        name=OpenSSH
+
+    - name: Open Docker ports
+      become: true
+      ufw: >
+        rule=allow
+        port={{ item }}
+        proto=tcp
+      with_items:
+        - 80
+        - 443
+        - 2375 # Docker daemon API port (non-TLS)
+        - 2276 # Docker daemon API port (TLS)
+        - 3276 # Swarm API port
+
+    - name: Deny incoming requests by default
+      become: true
+      ufw: >-
+        default=deny
+
+    - name: Turn the firewall on
+    become: true
+    ufw: >-
+      state=enabled
+
+    - name: Set memory limit for GRUB
+    become: true
+    lineinfile: >-
+      dest=/etc/default/grub
+      regexp=^GRUB_CMDLINE_LINUX_DEFAULT
+      line='GRUB_CMDLINE_LINUX_DEFAULT="cgroup_enable=memory swapaccount=1"'
+
+    - name: Load new GRUB configuration
+    become: true
+    command: update-grub
+
+    - name: Set hostname
+    become: true
+    hostname={{ inventory_hostname }}
+
+    - name: Set hostname in /etc/hosts
+      become: true
+      lineinfile: >-
+        dest=/etc/hosts regexp='^127\.0\.0\.1'
+        line='127.0.0.1 {{ inventory_hostname }}'
+        owner=root
+        group=root
+        mode=0644
+

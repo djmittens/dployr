@@ -1,0 +1,11 @@
+version: "3.4"
+
+services:
+  provision:
+    image: djmittens/dployr
+    build: ./
+    net: host
+    volumes:
+      - ${SSH_FOLDER:=~/.ssh}:/root/.ssh
+    environment:
+      - TARGET_HOST=${TARGET_HOST:= localhost}
