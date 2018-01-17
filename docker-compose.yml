@@ -4,8 +4,8 @@ services:
   provision:
     image: djmittens/dployr
     build: ./
-    net: host
+    network_mode: host
     volumes:
-      - ${SSH_FOLDER:=~/.ssh}:/root/.ssh
+      - ${SSH_FOLDER:-~/.ssh}:/root/.ssh
     environment:
-      - TARGET_HOST=${TARGET_HOST:= localhost}
+      - TARGET_HOST=${TARGET_HOST:-localhost}
